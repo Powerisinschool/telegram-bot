@@ -12,7 +12,7 @@ export class AppController {
 
   @Post('new-message')
   @Header('Cache-Control', 'none')
-  newMessage(@Req() request: Request, @Body() message: any): string {
-    return this.appService.newMessage(message);
+  webhook(@Req() request: Request, @Body() message: any): string {
+    return this.appService.webhook(message);
   }
 }
