@@ -35,7 +35,7 @@ interface ITelegramBotMessage {
 @Injectable()
 export class AppService {
   private readonly baseUrl = 'https://api.telegram.org/bot';
-  private readonly helpMsg = 'Commands:\n/start - Start the bot\n/switch - Switch to an existing stream.\nUsage: /switch <your_stream_id_here>\n/done - Finish uploading files';
+  private readonly helpMsg = 'Commands:\n<code>/start</code> - Start the bot\n<code>/switch</code> - Switch to an existing stream.\nUsage: <code>/switch <your_stream_id_here></code>\n<code>/done</code> - Finish uploading files';
 
   constructor(private readonly httpService: HttpService,
     private firebaseRepository: FirebaseRepository
@@ -72,7 +72,8 @@ export class AppService {
           break;
 
         case '/done':
-          this.sendMessage(message.chat.id, 'Thank you, will zip them now!').subscribe();
+          let msg = this.sendTempMessage(message.chat.id, "<bold>Processing...</bold>");
+          this.sendMessage(message.chat.id, 'Thank you, will zip them now!');
           break;
 
         case '/switch':
@@ -92,6 +93,17 @@ export class AppService {
     return 'This endpoint is healthy!';
   }
 
+  sendTempMessage(chatId: number, text: string): Observable<AxiosResponse<ITelegramBotMessage>> {
+    const url = `${this.baseUrl}${process.env.BOT_TOKEN}/sendMessage`;
+    return this.httpService.post(url, {
+      chat_id: chatId,
+      text: text,
+      disable_notification: true,
+      protect_content: true,
+      parse_mode: "HTML",
+    });
+  }
+
   startStream(chatId: number): { id: string } {
     const streamId = this.getRandomUUID();
     return {
@@ -106,7 +118,16 @@ export class AppService {
     // return this.httpService.post(url, data);
     return this.httpService.post(url, {
       chat_id: chatId,
-      text: text
+      text: text,
+      parse_mode: "HTML",
+    });
+  }
+
+  deleteMessage(chatId: number, messageId: number): Observable<AxiosResponse<any>> {
+    const url = `${this.baseUrl}${process.env.BOT_TOKEN}/deleteMessage`;
+    return this.httpService.post(url, {
+      chat_id: chatId,
+      message_id: messageId
     });
   }
 

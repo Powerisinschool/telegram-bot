@@ -8,7 +8,7 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle('Zippity Zip')
     .setDescription('The Zippity Zip API description')
-    .setVersion('0.1.1')
+    .setVersion('0.2.1')
     .addTag('zippity')
     .build();
   const document = SwaggerModule.createDocument(app, config);
