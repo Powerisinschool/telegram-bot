@@ -6,10 +6,10 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const config = new DocumentBuilder()
-    .setTitle('NestJS Example')
-    .setDescription('The NestJS API description')
-    .setVersion('1.0')
-    .addTag('nestjs')
+    .setTitle('Zippity Zip')
+    .setDescription('The Zippity Zip API description')
+    .setVersion('0.1.1')
+    .addTag('zippity')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
