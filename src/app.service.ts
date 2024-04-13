@@ -45,11 +45,12 @@ export class AppService {
     return 'Hello World!';
   }
 
-  webhook(@Body() { message }: { message?: ITelegramBotMessage }): string {
+  async webhook(@Body() { message }: { message?: ITelegramBotMessage }): Promise<string> {
     if (!message) return;
     console.log('Received update:', message);
 
     const doc = this.firebaseRepository.conversations.doc(message.chat.id.toString());
+    console.log(await doc.get());
     try {
       doc.create({
         id: message.chat.id,
@@ -62,8 +63,9 @@ export class AppService {
     if (message.text) {
       switch (message.text) {
         case '/start':
-          var existingId = doc.get();
-          console.log(existingId)
+          this.sendTempMessage(message.chat.id, "<bold>Processing...</bold>");
+          const existingId = await doc.get();
+          console.log(existingId);
           const { id } = this.startStream(message.chat.id);
           this.sendMessage(message.chat.id, `Your Stream ID id ${id}.\nUpload your files and type \`/done\` when completed!`).subscribe();
           doc.set({
@@ -72,7 +74,7 @@ export class AppService {
           break;
 
         case '/done':
-          let msg = this.sendTempMessage(message.chat.id, "<bold>Processing...</bold>");
+          this.sendTempMessage(message.chat.id, "<bold>Processing...</bold>");
           this.sendMessage(message.chat.id, 'Thank you, will zip them now!');
           break;
 

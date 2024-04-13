@@ -12,7 +12,7 @@ export class AppController {
 
   @Post('webhook')
   @Header('Cache-Control', 'none')
-  webhook(@Req() request: Request, @Body() message: any): string {
+  async webhook(@Req() request: Request, @Body() message: any): Promise<string> {
     return this.appService.webhook(message);
   }
 
