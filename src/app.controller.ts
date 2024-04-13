@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Body, Controller, Get, Header, Post, Req } from '@nestjs/common';
 import { AppService } from './app.service';
 
 @Controller()
@@ -10,8 +10,9 @@ export class AppController {
     return this.appService.getHello();
   }
 
-  @Get('new-message')
-  newMessage(): string {
-    return this.appService.newMessage();
+  @Post('new-message')
+  @Header('Cache-Control', 'none')
+  newMessage(@Req() request: Request, @Body() message: any): string {
+    return this.appService.newMessage(message);
   }
 }

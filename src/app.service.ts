@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Body, Injectable } from '@nestjs/common';
 
 @Injectable()
 export class AppService {
@@ -6,7 +6,8 @@ export class AppService {
     return 'Hello World!';
   }
 
-  newMessage(): string {
+  newMessage(@Body() message: any): string {
+    console.log('Received update:', message);
     return 'New message';
   }
 }
