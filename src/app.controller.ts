@@ -10,9 +10,14 @@ export class AppController {
     return this.appService.getHello();
   }
 
-  @Post('new-message')
+  @Post('webhook')
   @Header('Cache-Control', 'none')
   webhook(@Req() request: Request, @Body() message: any): string {
     return this.appService.webhook(message);
+  }
+
+  @Get('random')
+  getRandom(): string {
+    return this.appService.getRandomString();
   }
 }
