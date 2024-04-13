@@ -48,11 +48,27 @@ export class AppService {
   webhook(@Body() { message }: { message?: ITelegramBotMessage }): string {
     if (!message) return;
     console.log('Received update:', message);
+
+    const doc = this.firebaseRepository.conversations.doc(message.chat.id.toString());
+    try {
+      doc.create({
+        id: message.chat.id,
+        first_name: message.chat.first_name,
+        last_name: message.chat.last_name,
+        username: message.chat.username
+      })
+    } catch (err) { }
+
     if (message.text) {
       switch (message.text) {
         case '/start':
+          var existingId = doc.get();
+          console.log(existingId)
           const { id } = this.startStream(message.chat.id);
           this.sendMessage(message.chat.id, `Your Stream ID id ${id}.\nUpload your files and type \`/done\` when completed!`).subscribe();
+          doc.set({
+            streamId: id
+          });
           break;
 
         case '/done':
