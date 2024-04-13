@@ -34,6 +34,7 @@ interface ITelegramBotMessage {
 @Injectable()
 export class AppService {
   private readonly baseUrl = 'https://api.telegram.org/bot';
+  private readonly helpMsg = 'Commands:\n/start - Start the bot\n/done - Finish uploading files';
 
   constructor(private readonly httpService: HttpService) {}
 
@@ -45,6 +46,19 @@ export class AppService {
     if (!message) return;
     console.log('Received update:', message);
     if (message.text) {
+      switch (message.text) {
+        case '/start':
+          this.sendMessage(message.chat.id, 'Upload your files and type /done when completed!').subscribe();
+          break;
+
+        case '/done':
+          this.sendMessage(message.chat.id, 'Thank you, will zip them now!').subscribe();
+          break;
+      
+        default:
+          this.sendMessage(message.chat.id, 'Invalid command!\n' + this.helpMsg).subscribe();
+          break;
+      }
       this.sendMessage(message.chat.id, `Received message: ${message.text}`).subscribe();
       return `Received message: ${message.text}`;
     }
