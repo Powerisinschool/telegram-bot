@@ -7,7 +7,7 @@ export class AppService {
   }
 
   newMessage(@Body() message: any): string {
-    console.log(message);
+    console.log('Received update:', message);
     return 'New message';
   }
 }
