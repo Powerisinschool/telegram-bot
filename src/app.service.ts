@@ -35,7 +35,7 @@ interface ITelegramBotMessage {
 @Injectable()
 export class AppService {
   private readonly baseUrl = 'https://api.telegram.org/bot';
-  private readonly helpMsg = 'Commands:\n/start - Start the bot\n/done - Finish uploading files';
+  private readonly helpMsg = 'Commands:\n/start - Start the bot\n/switch - Switch to an existing stream.\nUsage: /switch <your_stream_id_here>\n/done - Finish uploading files';
 
   constructor(private readonly httpService: HttpService,
     private firebaseRepository: FirebaseRepository
