@@ -1,80 +1,46 @@
 import { HttpService } from '@nestjs/axios';
 import { Body, Injectable } from '@nestjs/common';
-import { Observable } from 'rxjs';
-import { AxiosResponse } from 'axios';
-import { FirebaseRepository } from './firebase/firebase.repository';
-
-interface ITelegramBotMessage {
-  message_id: number,
-  from: {
-    id: number,
-    is_bot: boolean,
-    first_name: string,
-    last_name: string,
-    username: string,
-    language_code: string
-  },
-  chat: {
-    id: number,
-    first_name: string,
-    last_name: string,
-    username: string,
-    type: string
-  },
-  date: number,
-  text?: string,
-  document?: {
-    file_name: string,
-    mime_type: string,
-    file_id: string,
-    file_unique_id: string,
-    file_size: number
-  }
-}
+import { AxiosError, AxiosResponse } from 'axios';
+import { Observable, catchError, firstValueFrom } from 'rxjs';
+import { MessageDto } from './dto/message.interface';
+// import { FirebaseRepository } from './firebase/firebase.repository';
+import { UserService } from './user/user.service';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class AppService {
-  private readonly baseUrl = 'https://api.telegram.org/bot';
+  private readonly baseUrl = process.env.DEVELOPMENT ? 'http://localhost:3000/testBot' : 'https://api.telegram.org/bot';
   private readonly helpMsg = 'Commands:\n<code>/start</code> - Start the bot\n<code>/switch</code> - Switch to an existing stream.\nUsage: <code>/switch <your_stream_id_here></code>\n<code>/done</code> - Finish uploading files';
 
-  constructor(private readonly httpService: HttpService,
-    private firebaseRepository: FirebaseRepository
-  ) {}
+  constructor(
+    private readonly httpService: HttpService,
+    private userService: UserService,
+    // private firebaseRepository: FirebaseRepository
+  ) { }
 
   getHello(): string {
     return 'Hello World!';
   }
 
-  async webhook(@Body() { message }: { message?: ITelegramBotMessage }): Promise<string> {
+  async webhook(@Body() { message }: { message?: MessageDto }): Promise<string> {
     if (!message) return;
     console.log('Received update:', message);
 
-    const doc = this.firebaseRepository.conversations.doc(message.chat.id.toString());
-    console.log(await doc.get());
-    try {
-      doc.create({
-        id: message.chat.id,
-        first_name: message.chat.first_name,
-        last_name: message.chat.last_name,
-        username: message.chat.username
-      })
-    } catch (err) { }
+    const tempMessage = await this.sendTempMessage(message.chat.id, "<bold>Processing...</bold>");
+    const user = await this.userService.findOne(message.from.id);
+    if (!user) {
+      console.log("Not Existing!!!");
+      this.userService.createUser(new User(message.from.id, message.from.first_name, message.from.last_name, message.from.username));
+    }
 
     if (message.text) {
       switch (message.text) {
         case '/start':
-          this.sendTempMessage(message.chat.id, "<bold>Processing...</bold>");
-          const existingId = await doc.get();
-          console.log(existingId);
           const { id } = this.startStream(message.chat.id);
-          this.sendMessage(message.chat.id, `Your Stream ID id ${id}.\nUpload your files and type \`/done\` when completed!`).subscribe();
-          doc.set({
-            streamId: id
-          });
+          this.sendMessage(message.chat.id, `Your Stream ID id ${id}.\nUpload your files and type \`/done\` when completed!`);
           break;
 
         case '/done':
-          this.sendTempMessage(message.chat.id, "<bold>Processing...</bold>");
           this.sendMessage(message.chat.id, 'Thank you, will zip them now!');
           break;
 
@@ -84,27 +50,55 @@ export class AppService {
             this.sendMessage(message.chat.id, 'Invalid Stream ID provided');
           }
           break;
-      
+
         default:
-          this.sendMessage(message.chat.id, 'Invalid command!\n' + this.helpMsg).subscribe();
+          this.sendMessage(message.chat.id, 'Invalid command!\n' + this.helpMsg);
           break;
       }
-      // this.sendMessage(message.chat.id, `Received message: ${message.text}`).subscribe();
-      // return `Received message: ${message.text}`;
     }
+    console.log(tempMessage);
+    this.deleteMessage(tempMessage.chat.id, tempMessage.message_id);
     return 'This endpoint is healthy!';
   }
 
-  sendTempMessage(chatId: number, text: string): Observable<AxiosResponse<ITelegramBotMessage>> {
+  async sendTempMessage(chatId: number, text: string, timeout: number = -1): Promise<MessageDto> {
     const url = `${this.baseUrl}${process.env.BOT_TOKEN}/sendMessage`;
-    return this.httpService.post(url, {
-      chat_id: chatId,
-      text: text,
-      disable_notification: true,
-      protect_content: true,
-      parse_mode: "HTML",
-    });
+    console.log("Sending a temporary message to", url);
+    const { data } = await firstValueFrom(
+        this.httpService.post<MessageDto>(url, {
+          chat_id: chatId,
+          text: text,
+          disable_notification: true,
+          protect_content: true,
+          parse_mode: "HTML",
+        }).pipe(
+          catchError((error: AxiosError) => {
+            throw 'An error happened with Axios!';
+          }),
+        ),
+    );
+    if (timeout > 0) {
+      setTimeout(() => {
+        this.deleteMessage(data.chat.id, data.message_id);
+      }, timeout);
+    };
+    return data;
   }
+
+  // this.httpService.post(url, {
+  //   chat_id: chatId,
+  //   text: text,
+  //   disable_notification: true,
+  //   protect_content: true,
+  //   parse_mode: "HTML",
+  // }).subscribe(response => {
+  //   const message = (response.data);
+  //   if (timeout > 0) {
+  //     setTimeout(() => {
+  //       this.deleteMessage(message.chat.id, message.message_id);
+  //     }, timeout);
+  //   }
+  // })
 
   startStream(chatId: number): { id: string } {
     const streamId = this.getRandomUUID();
@@ -115,9 +109,12 @@ export class AppService {
 
   sendMessage(chatId: number, text: string): Observable<AxiosResponse<any>> {
     const url = `${this.baseUrl}${process.env.BOT_TOKEN}/sendMessage`;
-    // const data = `chat_id=${chatId}&text=${encodeURIComponent(text)}`;
-
-    // return this.httpService.post(url, data);
+    console.log("Sending standard message to", url);
+    console.log("Sent Message:", {
+      chatId,
+      text,
+      parseMode: "HTML",
+    });
     return this.httpService.post(url, {
       chat_id: chatId,
       text: text,

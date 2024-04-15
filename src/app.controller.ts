@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Header, Post, Req } from '@nestjs/common';
 import { AppService } from './app.service';
+import { WebhookDto } from './dto/webhook.dto';
 
 @Controller()
 export class AppController {
@@ -12,8 +13,8 @@ export class AppController {
 
   @Post('webhook')
   @Header('Cache-Control', 'none')
-  async webhook(@Req() request: Request, @Body() message: any): Promise<string> {
-    return this.appService.webhook(message);
+  async webhook(@Body() data: WebhookDto ): Promise<string> {
+    return this.appService.webhook(data);
   }
 
   @Get('random')
