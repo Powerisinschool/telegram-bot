@@ -10,7 +10,7 @@ import { User } from './entities/user.entity';
 @Injectable()
 export class AppService {
   private readonly baseUrl = process.env.DEVELOPMENT ? 'http://localhost:3000/testBot' : 'https://api.telegram.org/bot';
-  private readonly helpMsg = 'Commands:\n<code>/start</code> - Start the bot\n<code>/switch</code> - Switch to an existing stream.\nUsage: <code>/switch <your_stream_id_here></code>\n<code>/done</code> - Finish uploading files';
+  private readonly helpMsg = `Commands:\n<code>/start</code> - Start the bot\n<code>/switch</code> - Switch to an existing stream.\nUsage: <code>/switch <your_stream_id_here></code>\n<code>/done</code> - Finish uploading files`;
 
   constructor(
     private readonly httpService: HttpService,
@@ -24,7 +24,7 @@ export class AppService {
 
   async webhook(@Body() { message }: { message?: MessageDto }): Promise<string> {
     if (!message) return;
-    console.log('Received update:', message);
+    // console.log('Received update:', message);
 
     const tempMessage = await this.sendTempMessage(message.chat.id, "<bold>Processing...</bold>");
     const user = await this.userService.findOne(message.from.id);
@@ -52,56 +52,47 @@ export class AppService {
           break;
 
         default:
-          this.sendMessage(message.chat.id, 'Invalid command!\n' + this.helpMsg);
+          this.sendMessage(message.chat.id, `Invalid command!\n${this.helpMsg}`);
           break;
       }
     }
-    console.log(tempMessage);
-    this.deleteMessage(tempMessage.chat.id, tempMessage.message_id);
+    // console.log(tempMessage);
+    const { data } = await firstValueFrom(this.deleteMessage(tempMessage.chat.id, tempMessage.message_id));
+    if (!data.ok) {
+      throw 'An error happened with Telegram and the message could not be deleted!';
+    }
     return 'This endpoint is healthy!';
   }
 
   async sendTempMessage(chatId: number, text: string, timeout: number = -1): Promise<MessageDto> {
     const url = `${this.baseUrl}${process.env.BOT_TOKEN}/sendMessage`;
     console.log("Sending a temporary message to", url);
+
     const { data } = await firstValueFrom(
-        this.httpService.post<ReturnMessageDto>(url, {
-          chat_id: chatId,
-          text: text,
-          disable_notification: true,
-          protect_content: true,
-          parse_mode: "HTML",
-        }).pipe(
-          catchError((error: AxiosError) => {
-            throw 'An error happened with Axios!';
-          }),
-        ),
+      this.httpService.post<ReturnMessageDto>(url, {
+        chat_id: chatId,
+        text: text,
+        // disable_notification: true,
+        // protect_content: true,
+        // parse_mode: "HTML",
+      }).pipe(
+        catchError((error: AxiosError) => {
+          console.error('An error happened with Axios!', error);
+          throw 'An error happened with Axios!';
+        }),
+      ),
     );
     if (!data.ok) {
-      throw 'An error happened with Telegram!';
+      throw 'An error happened with Telegram! The message could not be sent!';
     }
     if (timeout > 0) {
       setTimeout(() => {
         this.deleteMessage(data.result.chat.id, data.result.message_id);
       }, timeout);
     };
+
     return data.result;
   }
-
-  // this.httpService.post(url, {
-  //   chat_id: chatId,
-  //   text: text,
-  //   disable_notification: true,
-  //   protect_content: true,
-  //   parse_mode: "HTML",
-  // }).subscribe(response => {
-  //   const message = (response.data);
-  //   if (timeout > 0) {
-  //     setTimeout(() => {
-  //       this.deleteMessage(message.chat.id, message.message_id);
-  //     }, timeout);
-  //   }
-  // })
 
   startStream(chatId: number): { id: string } {
     const streamId = this.getRandomUUID();
@@ -110,24 +101,31 @@ export class AppService {
     };
   }
 
-  sendMessage(chatId: number, text: string): Observable<AxiosResponse<any>> {
+  async sendMessage(chatId: number, text: string): Promise<MessageDto> {
     const url = `${this.baseUrl}${process.env.BOT_TOKEN}/sendMessage`;
     console.log("Sending standard message to", url);
-    console.log("Sent Message:", {
-      chatId,
-      text,
-      parseMode: "HTML",
-    });
-    return this.httpService.post(url, {
-      chat_id: chatId,
-      text: text,
-      parse_mode: "HTML",
-    });
+
+    const { data } = await firstValueFrom(
+      this.httpService.post<ReturnMessageDto>(url, {
+        chat_id: chatId,
+        text: text,
+        // parse_mode: "HTML",
+      }).pipe(
+        catchError((error: AxiosError) => {
+          console.error('An error happened with Axios!', error);
+          throw error;
+        }),
+      ),
+    );
+
+    return data.result;
   }
 
   deleteMessage(chatId: number, messageId: number): Observable<AxiosResponse<any>> {
     const url = `${this.baseUrl}${process.env.BOT_TOKEN}/deleteMessage`;
-    return this.httpService.post(url, {
+    console.log("Deleting a message using", url);
+
+    return this.httpService.post<any>(url, {
       chat_id: chatId,
       message_id: messageId
     });
