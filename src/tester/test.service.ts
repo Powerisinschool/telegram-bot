@@ -6,19 +6,19 @@ export class TestService {
     constructor() { }
 
     sendMessage(data: any): any {
-        console.log(data);
+        // console.log(data);
         return {
             ok: true,
             result: {
                 message_id: 54,
                 from: {
-                    id: 789,
+                    id: 189,
                     is_bot: true,
                     first_name: "Zippity",
                     username: "zippall_bot"
                 },
                 chat: {
-                    id: 789,
+                    id: data.chat_id,
                     first_name: "Tolulope",
                     last_name: "Olagunju",
                     username: "tolu_0lagunju",
@@ -30,8 +30,11 @@ export class TestService {
         };
     }
 
-    deleteMessage(data: any): string {
-        console.log("Deleting message:", data);
-        return 'message deleted';
+    deleteMessage(data: any): any {
+        // console.log("Deleting message:", data);
+        return {
+            ok: true,
+            result: true
+        };
     }
 }
