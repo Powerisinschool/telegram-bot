@@ -72,9 +72,9 @@ export class AppService {
       this.httpService.post<ReturnMessageDto>(url, {
         chat_id: chatId,
         text: text,
-        // disable_notification: true,
-        // protect_content: true,
-        // parse_mode: "HTML",
+        disable_notification: true,
+        protect_content: true,
+        parse_mode: "HTML",
       }).pipe(
         catchError((error: AxiosError) => {
           console.error('An error happened with Axios!', error);
@@ -109,7 +109,7 @@ export class AppService {
       this.httpService.post<ReturnMessageDto>(url, {
         chat_id: chatId,
         text: text,
-        // parse_mode: "HTML",
+        parse_mode: "HTML",
       }).pipe(
         catchError((error: AxiosError) => {
           console.error('An error happened with Axios!', error);
