@@ -10,7 +10,7 @@ import { User } from './entities/user.entity';
 @Injectable()
 export class AppService {
   private readonly baseUrl = process.env.DEVELOPMENT ? 'http://localhost:3000/testBot' : 'https://api.telegram.org/bot';
-  private readonly helpMsg = `Commands:\n<code>/start</code> - Start the bot\n<code>/switch</code> - Switch to an existing stream.\nUsage: <code>/switch <your_stream_id_here></code>\n<code>/done</code> - Finish uploading files`;
+  private readonly helpMsg = `Commands:\n\`/start\` - Start the bot\n\`/switch\` - Switch to an existing stream.\n_Usage_: \`/switch <your_stream_id_here>\`\n\`/done\` - Finish uploading files`;
 
   constructor(
     private readonly httpService: HttpService,
@@ -26,7 +26,7 @@ export class AppService {
     if (!message) return;
     // console.log('Received update:', message);
 
-    const tempMessage = await this.sendTempMessage(message.chat.id, "<b>Processing...</b>");
+    const tempMessage = await this.sendTempMessage(message.chat.id, "_Processing..._");
     const user = await this.userService.findOne(message.from.id);
     if (!user) {
       console.log("Not Existing!!!");
@@ -74,7 +74,7 @@ export class AppService {
         text: text,
         disable_notification: true,
         protect_content: true,
-        parse_mode: "HTML",
+        parse_mode: "MarkdownV2",
       }).pipe(
         catchError((error: AxiosError) => {
           console.error('An error happened with Axios!', error);
@@ -109,7 +109,7 @@ export class AppService {
       this.httpService.post<ReturnMessageDto>(url, {
         chat_id: chatId,
         text: text,
-        parse_mode: "HTML",
+        parse_mode: "MarkdownV2",
       }).pipe(
         catchError((error: AxiosError) => {
           console.error('An error happened with Axios!', error);
