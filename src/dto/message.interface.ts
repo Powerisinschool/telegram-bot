@@ -101,3 +101,11 @@ export class MessageDto {
     @ApiProperty()
     document?: MessageDocumentDto;
 }
+
+export class ReturnMessageDto {
+    @ApiProperty()
+    ok: boolean;
+
+    @ApiProperty()
+    result: MessageDto;
+}

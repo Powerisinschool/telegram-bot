@@ -2,7 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import { Body, Injectable } from '@nestjs/common';
 import { AxiosError, AxiosResponse } from 'axios';
 import { Observable, catchError, firstValueFrom } from 'rxjs';
-import { MessageDto } from './dto/message.interface';
+import { MessageDto, ReturnMessageDto } from './dto/message.interface';
 // import { FirebaseRepository } from './firebase/firebase.repository';
 import { UserService } from './user/user.service';
 import { User } from './entities/user.entity';
@@ -65,7 +65,7 @@ export class AppService {
     const url = `${this.baseUrl}${process.env.BOT_TOKEN}/sendMessage`;
     console.log("Sending a temporary message to", url);
     const { data } = await firstValueFrom(
-        this.httpService.post<MessageDto>(url, {
+        this.httpService.post<ReturnMessageDto>(url, {
           chat_id: chatId,
           text: text,
           disable_notification: true,
@@ -77,12 +77,15 @@ export class AppService {
           }),
         ),
     );
+    if (!data.ok) {
+      throw 'An error happened with Telegram!';
+    }
     if (timeout > 0) {
       setTimeout(() => {
-        this.deleteMessage(data.chat.id, data.message_id);
+        this.deleteMessage(data.result.chat.id, data.result.message_id);
       }, timeout);
     };
-    return data;
+    return data.result;
   }
 
   // this.httpService.post(url, {

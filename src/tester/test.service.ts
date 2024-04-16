@@ -5,27 +5,28 @@ import { MessageDto } from "src/dto/message.interface";
 export class TestService {
     constructor() { }
 
-    sendMessage(data: any): MessageDto {
+    sendMessage(data: any): any {
         console.log(data);
         return {
-            message_id: 54,
-            from: {
-                id: 789,
-                first_name: "string",
-                last_name: "string",
-                is_bot: false,
-                language_code: "EN",
-                username: "string",
-            },
-            chat: {
-                id: 789,
-                first_name: "string",
-                last_name: "string",
-                type: "text",
-                username: "string",
-            },
-            date: Date.now().valueOf(),
-            text: "text",
+            ok: true,
+            result: {
+                message_id: 54,
+                from: {
+                    id: 789,
+                    is_bot: true,
+                    first_name: "Zippity",
+                    username: "zippall_bot"
+                },
+                chat: {
+                    id: 789,
+                    first_name: "Tolulope",
+                    last_name: "Olagunju",
+                    username: "tolu_0lagunju",
+                    type: "private"
+                },
+                date: 1713263331,
+                text: "Hey there!"
+            }
         };
     }
 
