@@ -12,7 +12,7 @@ export class TestController {
     }
 
     @Post('sendMessage')
-    sendMessage(@Body() data: any): MessageDto {
+    sendMessage(@Body() data: any): any {
         return this.testService.sendMessage(data);
     }
 
