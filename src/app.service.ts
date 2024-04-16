@@ -26,7 +26,7 @@ export class AppService {
     if (!message) return;
     // console.log('Received update:', message);
 
-    const tempMessage = await this.sendTempMessage(message.chat.id, "<bold>Processing...</bold>");
+    const tempMessage = await this.sendTempMessage(message.chat.id, "<b>Processing...</b>");
     const user = await this.userService.findOne(message.from.id);
     if (!user) {
       console.log("Not Existing!!!");
