@@ -10,6 +10,7 @@ import { Stream } from './entities/stream.entity';
 import { UserModule } from './user/user.module';
 import { UserService } from './user/user.service';
 import { TestModule } from './tester/test.module';
+import { File } from './entities/file.entity';
 
 @Module({
   imports: [
@@ -27,7 +28,7 @@ import { TestModule } from './tester/test.module';
       retryAttempts: 4,
       synchronize: true,
       logging: true,
-      entities: [User, Stream],
+      entities: [User, Stream, File],
     }),
     UserModule,
     TestModule,
