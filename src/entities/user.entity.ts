@@ -21,7 +21,7 @@ export class User {
   @Column()
   email?: string;
 
-  @OneToOne(type => Stream, stream => stream.id)
+  @OneToOne(type => Stream, stream => stream.user)
   stream?: Stream;
 
   constructor(id: number, firstName: string, lastName: string, username?: string) {

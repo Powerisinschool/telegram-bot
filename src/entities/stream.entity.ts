@@ -1,17 +1,15 @@
-import { Column, Entity, ObjectIdColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, ObjectIdColumn, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { User } from './user.entity';
+import { File } from './file.entity';
 
 @Entity()
 export class Stream {
-    @ObjectIdColumn()
+    @PrimaryGeneratedColumn('uuid')
     id: number;
 
-    @Column()
-    filename: string;
+    @OneToMany(() => File, file => file.buffer, { eager: true })
+    files: File[];
 
-    @Column()
-    files: string[];
-
-    @OneToOne(type => User, user => user.id)
+    @ManyToOne(() => User, user => user.stream, { eager: true })
     user: User;
 }
